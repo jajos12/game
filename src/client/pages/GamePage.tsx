@@ -17,7 +17,8 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
   const [isRevealingAll, setIsRevealingAll] = useState(false);
   
   // Peek Tool state
-  const [peekCooldown, setPeekCooldown] = useState(20);
+  const [peekCharges, setPeekCharges] = useState(5);
+  const [peekCooldown, setPeekCooldown] = useState(0);
   const [isPeeking, setIsPeeking] = useState(false);
   const [peekedCardId, setPeekedCardId] = useState<string | null>(null);
 
@@ -71,24 +72,17 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
     let timer: number;
     if (roomState?.phase === 'playing' && peekCooldown > 0 && !isPeeking && !peekedCardId) {
       timer = window.setInterval(() => {
-        setPeekCooldown(prev => Math.max(0, prev - 1));
+        setPeekCooldown(prev => {
+          if (prev <= 1) {
+            setPeekCharges(5); // Reset charges when cooldown ends
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
     }
     return () => clearInterval(timer);
   }, [roomState?.phase, peekCooldown, isPeeking, peekedCardId]);
-
-  // ===== MEMORIZE COUNTDOWN =====
-
-  // ===== ELAPSED GAME TIME =====
-  useEffect(() => {
-    let timer: number;
-    if (roomState?.phase === 'playing' && roomState.startedAt) {
-      timer = window.setInterval(() => {
-        setElapsedTime(Math.floor((Date.now() - (roomState.startedAt || 0) - 12000) / 1000));
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [roomState?.phase, roomState?.startedAt]);
 
   const handleSelect = useCallback((cardId: string) => {
     if (isLocked || isRevealingAll) return;
@@ -96,7 +90,13 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
     if (isPeeking) {
       setIsPeeking(false);
       setPeekedCardId(cardId);
-      setPeekCooldown(20);
+      
+      const newCharges = peekCharges - 1;
+      setPeekCharges(newCharges);
+      
+      if (newCharges <= 0) {
+        setPeekCooldown(20);
+      }
       
       // Clear peek after 3 seconds
       setTimeout(() => {
@@ -234,12 +234,12 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
                 onClick={() => setIsPeeking(!isPeeking)}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <span>{isPeeking ? 'Select a card!' : 'Use Peek Tool'}</span>
+                <span>{isPeeking ? 'Select a card!' : `Peek Tool (${peekCharges}/5)`}</span>
               </button>
             ) : (
               <div className="stat-chip stat-chip--cooldown">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
-                <span>Peek in {peekCooldown}s</span>
+                <span>Recharging: {peekCooldown}s</span>
               </div>
             )}
 
@@ -301,7 +301,7 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
             selections={mySelections}
             peekedCardId={peekedCardId}
             onSelect={handleSelect}
-            isLocked={isLocked || isRevealingAll || peekedCardId !== null}
+            isLocked={isLocked || isRevealingAll}
             showAll={isRevealingAll}
             wrongFlash={[]}
           />

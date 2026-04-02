@@ -192,6 +192,7 @@ export function setupSocketHandlers(io: Server<ClientToServerEvents, ServerToCli
           // Lock only after 5+ consecutive wrong attempts — 3s lockout
           if (player.wrongStreak >= 5) {
             player.lockedUntil = Date.now() + 3000;
+            player.wrongStreak = 0; // Reset streak after penalty is applied
           }
 
           io.to(room.roomCode).emit(SOCKET_EVENTS.SELECTION_RESULT, {
