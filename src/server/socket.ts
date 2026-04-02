@@ -109,7 +109,7 @@ export function setupSocketHandlers(io: Server<ClientToServerEvents, ServerToCli
       setTimeout(() => {
         if (room.phase === 'loading') {
           room.phase = 'memorize';
-          room.memorizeEndTime = Date.now() + 5000; // 5 more seconds for memorization
+          room.memorizeEndTime = Date.now() + 10000; // 10 more seconds for memorization
           io.to(room.roomCode).emit(SOCKET_EVENTS.ROOM_STATE, room);
 
           // Transition to playing after memorization
@@ -118,7 +118,7 @@ export function setupSocketHandlers(io: Server<ClientToServerEvents, ServerToCli
               room.phase = 'playing';
               io.to(room.roomCode).emit(SOCKET_EVENTS.ROOM_STATE, room);
             }
-          }, 5000);
+          }, 10000);
         }
       }, 10000);
     });
