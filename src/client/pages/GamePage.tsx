@@ -80,7 +80,7 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
   useEffect(() => {
     let timer: number;
     if (roomState?.phase === 'memorize') {
-      setMemorizeSeconds(12);
+      setMemorizeSeconds(10);
       timer = window.setInterval(() => {
         setMemorizeSeconds(prev => Math.max(0, prev - 1));
       }, 1000);
@@ -216,7 +216,7 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
                 <circle cx="40" cy="40" r="36" fill="none" stroke="rgba(245,158,11,0.15)" strokeWidth="4"/>
                 <circle cx="40" cy="40" r="36" fill="none" stroke="#f59e0b" strokeWidth="4"
                   strokeDasharray={`${2 * Math.PI * 36}`}
-                  strokeDashoffset={`${2 * Math.PI * 36 * (1 - memorizeSeconds / 12)}`}
+                  strokeDashoffset={`${2 * Math.PI * 36 * (1 - memorizeSeconds / 10)}`}
                   strokeLinecap="round"
                   style={{ transition: 'stroke-dashoffset 1s linear' }}
                 />
@@ -367,7 +367,7 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
   if (roomState.phase === 'finished') {
     const sorted = [...roomState.players].sort((a, b) => b.score - a.score);
     const gameDuration = roomState.endedAt && roomState.startedAt
-      ? Math.floor((roomState.endedAt - roomState.startedAt - 15000) / 1000) // Adjustment for 10s loading + 5s memorize
+      ? Math.floor((roomState.endedAt - roomState.startedAt - 20000) / 1000) // Adjustment for 10s loading + 10s memorize
       : 0;
 
     return (
