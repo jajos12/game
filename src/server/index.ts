@@ -39,7 +39,7 @@ if (isProduction) {
   const distPath = path.join(__dirname, '../../dist');
   app.use(express.static(distPath));
   
-  app.get('/:path*', (_req, res) => {
+  app.use((_req, res) => {
     res.sendFile(path.resolve(distPath, 'index.html'));
   });
 }
