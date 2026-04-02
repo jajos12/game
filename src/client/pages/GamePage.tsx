@@ -367,7 +367,7 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
   if (roomState.phase === 'finished') {
     const sorted = [...roomState.players].sort((a, b) => b.score - a.score);
     const gameDuration = roomState.endedAt && roomState.startedAt
-      ? Math.floor((roomState.endedAt - roomState.startedAt - 10000) / 1000) // Adjustment for loading + memorize
+      ? Math.floor((roomState.endedAt - roomState.startedAt - 15000) / 1000) // Adjustment for 10s loading + 5s memorize
       : 0;
 
     return (

@@ -105,7 +105,7 @@ export function setupSocketHandlers(io: Server<ClientToServerEvents, ServerToCli
       
       io.to(room.roomCode).emit(SOCKET_EVENTS.ROOM_STATE, room);
 
-      // Transition to memorize after 5 seconds of loading/pre-sync
+      // Transition to memorize after 10 seconds of loading/pre-sync
       setTimeout(() => {
         if (room.phase === 'loading') {
           room.phase = 'memorize';
@@ -120,7 +120,7 @@ export function setupSocketHandlers(io: Server<ClientToServerEvents, ServerToCli
             }
           }, 5000);
         }
-      }, 5000);
+      }, 10000);
     });
 
     socket.on(SOCKET_EVENTS.SELECT_CARD, (cardId: string) => {
