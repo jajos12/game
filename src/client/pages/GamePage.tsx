@@ -29,7 +29,7 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
   const [isRevealingAll, setIsRevealingAll] = useState(false);
   
   // Peek Tool state
-  const [peekCharges, setPeekCharges] = useState(5);
+  const [peekCharges, setPeekCharges] = useState(10);
   const [peekCooldown, setPeekCooldown] = useState(0);
   const [isPeeking, setIsPeeking] = useState(false);
   const [peekedCardId, setPeekedCardId] = useState<string | null>(null);
@@ -93,7 +93,7 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
     let timer: number;
     if (roomState?.phase === 'playing' && roomState.startedAt) {
       timer = window.setInterval(() => {
-        setElapsedTime(Math.floor((Date.now() - (roomState.startedAt || 0) - 12000) / 1000));
+        setElapsedTime(Math.floor((Date.now() - (roomState.startedAt || 0) - 20000) / 1000));
       }, 1000);
     }
     return () => clearInterval(timer);
@@ -106,7 +106,7 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
       timer = window.setInterval(() => {
         setPeekCooldown(prev => {
           if (prev <= 1) {
-            setPeekCharges(5); // Reset charges when cooldown ends
+            setPeekCharges(10); // Reset charges when cooldown ends
             return 0;
           }
           return prev - 1;
@@ -282,7 +282,7 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
                   onClick={() => setIsPeeking(!isPeeking)}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  <span>{isPeeking ? 'Select a card!' : `Peek Tool (${peekCharges}/5)`}</span>
+                  <span>{isPeeking ? 'Select a card!' : `Peek Tool (${peekCharges}/10)`}</span>
                 </button>
               ) : (
                 <div className="stat-chip stat-chip--cooldown">
