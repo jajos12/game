@@ -25,7 +25,7 @@ export type PlayerState = {
   isConnected: boolean;
 };
 
-export type GamePhase = 'lobby' | 'memorize' | 'playing' | 'finished';
+export type GamePhase = 'lobby' | 'loading' | 'memorize' | 'playing' | 'finished';
 
 export type RoomState = {
   roomCode: string;

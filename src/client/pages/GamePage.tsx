@@ -6,11 +6,23 @@ interface Props {
   roomHook: RoomHook;
 }
 
+const LITURGICAL_IMAGES = [
+  '/images/censer.png', '/images/chalice.png', '/images/st-cyril.png', '/images/st-anthony.png',
+  '/images/tabot.png', '/images/burning-bush.png', '/images/holy-myron.png', '/images/trinity.png',
+  '/images/gospel.png', '/images/hand-cross.png', '/images/council-nicea.png', '/images/st-mary.png',
+  '/images/qurban.png', '/images/noahs-ark.png', '/images/dove.png', '/images/st-george.png',
+  '/images/alpha-omega.png', '/images/st-tekle-haymanot.png'
+];
+
 const GamePage: React.FC<Props> = ({ roomHook }) => {
   const { roomState, playerId, startGame, selectCard, leaveRoom } = roomHook;
   const [memorizeSeconds, setMemorizeSeconds] = useState(12);
   const [lockCountdown, setLockCountdown] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
+
+  // Asset Loading state
+  const [isPreloaded, setIsPreloaded] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
   
   // Reveal All Tool state
   const [hasUsedReveal, setHasUsedReveal] = useState(false);
@@ -21,6 +33,26 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
   const [peekCooldown, setPeekCooldown] = useState(0);
   const [isPeeking, setIsPeeking] = useState(false);
   const [peekedCardId, setPeekedCardId] = useState<string | null>(null);
+
+  // ===== ASSET PRELOADER =====
+  useEffect(() => {
+    let loaded = 0;
+    const total = LITURGICAL_IMAGES.length;
+
+    LITURGICAL_IMAGES.forEach(src => {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        loaded++;
+        setLoadProgress(Math.floor((loaded / total) * 100));
+        if (loaded === total) setIsPreloaded(true);
+      };
+      img.onerror = () => {
+        loaded++; // Count as loaded even if error to avoid blocking forever
+        if (loaded === total) setIsPreloaded(true);
+      };
+    });
+  }, []);
 
   const me = roomState?.players.find((p: PlayerState) => p.id === playerId);
   const mySelections = roomState?.selections[playerId || ''] || [];
@@ -111,8 +143,6 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
   if (!roomState) return null;
 
   const isHost = roomState.hostId === playerId;
-  const matchedCount = roomState.board.filter((c: BoardCard) => c.matched).length / 2;
-  const totalPairs = roomState.board.length / 2;
 
   // ===== LOBBY PHASE =====
   if (roomState.phase === 'lobby') {
@@ -204,112 +234,131 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
     );
   }
 
-  // ===== PLAYING PHASE =====
-  if (roomState.phase === 'playing') {
+  // ===== PLAYING/LOADING PHASE =====
+  if (roomState.phase === 'playing' || roomState.phase === 'loading') {
+    const isActuallyLoading = roomState.phase === 'loading' || !isPreloaded;
     const sortedPlayers = [...roomState.players].sort((a, b) => b.score - a.score);
+    const totalPairs = roomState.board.length / 2;
+    const matchedCount = roomState.board.filter(c => c.matched).length / 2;
+    
     return (
       <div className="game-wrapper">
-        <GameHeader roomCode={roomState.roomCode} isLocked={isLocked} phase="playing" lockCountdown={lockCountdown} />
-        <div className="game-main">
-          {/* Stats Row */}
-          <div className="stats-row">
-            <div className="stat-chip">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              <span>{matchedCount}/{totalPairs} matched</span>
+        {isActuallyLoading && (
+          <div className="loading-overlay">
+            <div className="loading-circle"></div>
+            <div>
+              <div className="loading-title">ትንሽ ይጠብቁ!!!</div>
+              <div className="loading-subtitle">በማውረድ ላይ ... {loadProgress}%</div>
+              <div className="loading-progress-container">
+                <div className="loading-progress-bar" style={{ width: `${loadProgress}%` }}></div>
+              </div>
             </div>
-            <div className="stat-chip">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span>{formatTime(elapsedTime)}</span>
-            </div>
-            {me && me.wrongStreak > 0 && (
-              <div className="stat-chip stat-chip--warn">
-                <span>⚠ {me.wrongStreak} miss{me.wrongStreak > 1 ? 'es' : ''}</span>
-              </div>
-            )}
-            
-            {/* Peek Tool Button */}
-            {peekCooldown === 0 ? (
-              <button 
-                className={`stat-chip btn-peek ${isPeeking ? 'btn-peek--active' : 'btn-peek--ready'}`} 
-                onClick={() => setIsPeeking(!isPeeking)}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <span>{isPeeking ? 'Select a card!' : `Peek Tool (${peekCharges}/5)`}</span>
-              </button>
-            ) : (
-              <div className="stat-chip stat-chip--cooldown">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
-                <span>Recharging: {peekCooldown}s</span>
-              </div>
-            )}
-
-            {/* Reveal All Tool Button */}
-            {!hasUsedReveal ? (
-              <button 
-                className={`stat-chip btn-peek ${isRevealingAll ? 'btn-peek--active' : 'btn-peek--ready'}`} 
-                onClick={() => {
-                  if (isRevealingAll || hasUsedReveal) return;
-                  setIsRevealingAll(true);
-                  setHasUsedReveal(true);
-                  setTimeout(() => setIsRevealingAll(false), 3000);
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-                <span>{isRevealingAll ? 'Revealing Board!' : 'Reveal All (1 Use)'}</span>
-              </button>
-            ) : (
-              <div className="stat-chip stat-chip--cooldown">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-                <span>Reveal Used</span>
-              </div>
-            )}
           </div>
-
-          {/* Scoreboard */}
-          <div className="scoreboard">
-            {sortedPlayers.map((p: PlayerState, idx: number) => (
-              <div key={p.id} className={`scoreboard-card ${p.id === playerId ? 'scoreboard-card--me' : ''}`}>
-                <div className="scoreboard-rank">#{idx + 1}</div>
-                <div className="scoreboard-info">
-                  <div className="scoreboard-name">{p.username}</div>
-                  <div className="scoreboard-score-row">
-                    <span className="scoreboard-score">{p.score}</span>
-                    <span className="scoreboard-pts">pts</span>
-                  </div>
+        )}
+        
+        <div className={isActuallyLoading ? 'blur-content' : ''}>
+          <GameHeader roomCode={roomState.roomCode} isLocked={isLocked} phase="playing" lockCountdown={lockCountdown} />
+          <div className="game-main">
+            {/* Stats Row */}
+            <div className="stats-row">
+              <div className="stat-chip">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <span>{matchedCount}/{totalPairs} matched</span>
+              </div>
+              <div className="stat-chip">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>{formatTime(elapsedTime)}</span>
+              </div>
+              {me && me.wrongStreak > 0 && (
+                <div className="stat-chip stat-chip--warn">
+                  <span>⚠ {me.wrongStreak} miss{me.wrongStreak > 1 ? 'es' : ''}</span>
                 </div>
-                {p.wrongStreak >= 5 && <div className="scoreboard-locked-icon">🔒</div>}
-              </div>
-            ))}
-          </div>
+              )}
+              
+              {/* Peek Tool Button */}
+              {peekCooldown === 0 ? (
+                <button 
+                  className={`stat-chip btn-peek ${isPeeking ? 'btn-peek--active' : 'btn-peek--ready'}`} 
+                  onClick={() => setIsPeeking(!isPeeking)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span>{isPeeking ? 'Select a card!' : `Peek Tool (${peekCharges}/5)`}</span>
+                </button>
+              ) : (
+                <div className="stat-chip stat-chip--cooldown">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
+                  <span>Recharging: {peekCooldown}s</span>
+                </div>
+              )}
 
-          {/* Hint Panel */}
-          <HintPanel board={roomState.board} selections={peekedCardId ? [peekedCardId] : mySelections} />
-
-          {/* Lock Overlay */}
-          {isLocked && (
-            <div className="lock-overlay">
-              <div className="lock-overlay-inner">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <span>Locked for {lockCountdown}s — 5 consecutive misses!</span>
-              </div>
+              {/* Reveal All Tool Button */}
+              {!hasUsedReveal ? (
+                <button 
+                  className={`stat-chip btn-peek ${isRevealingAll ? 'btn-peek--active' : 'btn-peek--ready'}`} 
+                  onClick={() => {
+                    if (isRevealingAll || hasUsedReveal) return;
+                    setIsRevealingAll(true);
+                    setHasUsedReveal(true);
+                    setTimeout(() => setIsRevealingAll(false), 3000);
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                  <span>{isRevealingAll ? 'Revealing Board!' : 'Reveal All (1 Use)'}</span>
+                </button>
+              ) : (
+                <div className="stat-chip stat-chip--cooldown">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                  <span>Reveal Used</span>
+                </div>
+              )}
             </div>
-          )}
 
-          {/* Board */}
-          <Board
-            board={roomState.board}
-            selections={mySelections}
-            peekedCardId={peekedCardId}
-            onSelect={handleSelect}
-            isLocked={isLocked || isRevealingAll}
-            showAll={isRevealingAll}
-            wrongFlash={[]}
-          />
+            {/* Scoreboard */}
+            <div className="scoreboard">
+              {sortedPlayers.map((p, idx) => (
+                <div key={p.id} className={`scoreboard-card ${p.id === playerId ? 'scoreboard-card--me' : ''}`}>
+                  <div className="scoreboard-rank">#{idx + 1}</div>
+                  <div className="scoreboard-info">
+                    <div className="scoreboard-name">{p.username}</div>
+                    <div className="scoreboard-score-row">
+                      <span className="scoreboard-score">{p.score}</span>
+                      <span className="scoreboard-pts">pts</span>
+                    </div>
+                  </div>
+                  {p.wrongStreak >= 5 && <div className="scoreboard-locked-icon">🔒</div>}
+                </div>
+              ))}
+            </div>
+
+            {/* Hint Panel */}
+            <HintPanel board={roomState.board} selections={peekedCardId ? [peekedCardId] : mySelections} />
+
+            {/* Lock Overlay */}
+            {isLocked && (
+              <div className="lock-overlay">
+                <div className="lock-overlay-inner">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <span>Locked for {lockCountdown}s — 5 consecutive misses!</span>
+                </div>
+              </div>
+            )}
+
+            {/* Board */}
+            <Board
+              board={roomState.board}
+              selections={mySelections}
+              peekedCardId={peekedCardId}
+              onSelect={handleSelect}
+              isLocked={isLocked || isRevealingAll}
+              showAll={isRevealingAll}
+              wrongFlash={[]}
+            />
+          </div>
+          <footer className="game-footer">
+            <span>© Ethiopian Orthodox Congregation</span>
+            <button className="btn-exit" onClick={leaveRoom}>Exit Room</button>
+          </footer>
         </div>
-        <footer className="game-footer">
-          <span>© Ethiopian Orthodox Congregation</span>
-          <button className="btn-exit" onClick={leaveRoom}>Exit Room</button>
-        </footer>
       </div>
     );
   }
@@ -318,7 +367,7 @@ const GamePage: React.FC<Props> = ({ roomHook }) => {
   if (roomState.phase === 'finished') {
     const sorted = [...roomState.players].sort((a, b) => b.score - a.score);
     const gameDuration = roomState.endedAt && roomState.startedAt
-      ? Math.floor((roomState.endedAt - roomState.startedAt - 12000) / 1000)
+      ? Math.floor((roomState.endedAt - roomState.startedAt - 10000) / 1000) // Adjustment for loading + memorize
       : 0;
 
     return (

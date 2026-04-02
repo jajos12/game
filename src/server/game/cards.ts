@@ -33,14 +33,14 @@ export const CARD_PAIRS: PairDefinition[] = [
     id: 'tabot',
     title: "ታቦት",
     image: '/images/tabot.png',
-    hintA: "በቅድስተ ቅዱሳን ያለችው የቃል ኪዳን ታቦት",
+    hintA: "የሐዲስ ኪዳን መሰዊያ በኢኦተቤ",
     hintB: "የዐሰርቱ ቃላት ማደሪያ"
   },
   {
     id: 'burning-bush',
     title: "ዕፀ ጳጦስ",
     image: '/images/burning-bush.png',
-    hintA: "የማትቃጠል እሳት",
+    hintA: "የማትቃጠል ዕጽ",
     hintB: "የድንግል ማርያም ምሳሌ"
   },
   {
@@ -62,7 +62,7 @@ export const CARD_PAIRS: PairDefinition[] = [
     title: "ወንጌል",
     image: '/images/gospel.png',
     hintA: "የተገለጠው የእግዚአብሔር ቃል",
-    hintB: "የመንፈስ ሰይፍ"
+    hintB: "3 አመት ከ3ወር የተነገረ"
   },
   {
     id: 'hand-cross',
@@ -76,7 +76,7 @@ export const CARD_PAIRS: PairDefinition[] = [
     title: "ጉባኤ ኒቂያ",
     image: '/images/council-nicea.png',
     hintA: "፫፻፲፰ቱ ቅዱሳን አባቶች",
-    hintB: "የሃይማኖት ጸሎት (ጸሎተ ሃይማኖት) ብርሃን"
+    hintB: "የሃይማኖት ጸሎት (ጸሎተ ሃይማኖት)"
   },
   {
     id: 'st-mary',
@@ -96,7 +96,7 @@ export const CARD_PAIRS: PairDefinition[] = [
     id: 'noahs-ark',
     title: "የኖኅ መርከብ",
     image: '/images/noahs-ark.png',
-    hintA: "በውኃ መካከል የሆነ መዳን",
+    hintA: "የጥፋት ውሃ",
     hintB: "የቤተ ክርስቲያን ምሳሌ"
   },
   {
@@ -110,8 +110,8 @@ export const CARD_PAIRS: PairDefinition[] = [
     id: 'st-george',
     title: "ቅዱስ ጊዮርጊስ",
     image: '/images/st-george.png',
-    hintA: "የሰማዕታት መልከ ጼዴቅ",
-    hintB: "ያለውን ዘንዶ ድል የነሳው"
+    hintA: "የሰማዕታት አለቃ",
+    hintB: "ዘንዶውን ድል የነሳው"
   },
   {
     id: 'alpha-omega',
@@ -125,6 +125,6 @@ export const CARD_PAIRS: PairDefinition[] = [
     title: "አቡነ ተክለ ሃይማኖት",
     image: '/images/st-tekle-haymanot.png',
     hintA: "ባለ ስድስት ክንፍ አባት",
-    hintB: "የተዋሕዶ ምሰሶ"
+    hintB: "የኢትዮጵያው ሐዋርያ"
   }
 ];

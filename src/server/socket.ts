@@ -100,19 +100,27 @@ export function setupSocketHandlers(io: Server<ClientToServerEvents, ServerToCli
       });
 
       room.board = shuffle(board);
-      room.phase = 'memorize';
+      room.phase = 'loading'; // New loading phase
       room.startedAt = Date.now();
-      room.memorizeEndTime = Date.now() + 5000; // 5 seconds
-
+      
       io.to(room.roomCode).emit(SOCKET_EVENTS.ROOM_STATE, room);
 
-      // After 12 seconds, switch to playing phase
+      // Transition to memorize after 5 seconds of loading/pre-sync
       setTimeout(() => {
-        if (room.phase === 'memorize') {
-          room.phase = 'playing';
+        if (room.phase === 'loading') {
+          room.phase = 'memorize';
+          room.memorizeEndTime = Date.now() + 5000; // 5 more seconds for memorization
           io.to(room.roomCode).emit(SOCKET_EVENTS.ROOM_STATE, room);
+
+          // Transition to playing after memorization
+          setTimeout(() => {
+            if (room.phase === 'memorize') {
+              room.phase = 'playing';
+              io.to(room.roomCode).emit(SOCKET_EVENTS.ROOM_STATE, room);
+            }
+          }, 5000);
         }
-      }, 12000);
+      }, 5000);
     });
 
     socket.on(SOCKET_EVENTS.SELECT_CARD, (cardId: string) => {

@@ -11,4 +11,5 @@ export const SOCKET_EVENTS = {
   SCORE_UPDATED: 'game:score-updated',
   PLAYER_LOCKED: 'game:player-locked',
   GAME_FINISHED: 'game:finished',
+  CLIENT_READY: 'game:client-ready',
 } as const;
